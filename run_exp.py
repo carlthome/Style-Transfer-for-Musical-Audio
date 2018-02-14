@@ -22,8 +22,8 @@ def compute_style_loss(net, style_net, loss_fn):
         gram = []
         s_gram = []
         for (n, sn) in zip(net, style_net):
-            _, height, width, number = map(lambda i: i.value, n.get_shape())
-            _, height_style, width_style, number = map(lambda i: i.value, sn.get_shape())
+            _, height, width, number = [i.value for i in n.get_shape()]
+            _, height_style, width_style, number = [i.value for i in sn.get_shape()]
             
             factor = height*width
             style_factor = height_style*width_style
@@ -35,8 +35,8 @@ def compute_style_loss(net, style_net, loss_fn):
             s_gram += [tf.matmul(tf.transpose(feats_style), feats_style)/style_factor]
             style_loss += loss_fn(gram[-1], s_gram[-1], "style")
     else:
-        _, height, width, number = map(lambda i: i.value, net.get_shape())
-        _, height_style, width_style, number = map(lambda i: i.value, style_net.get_shape())
+        _, height, width, number = [i.value for i in net.get_shape()]
+        _, height_style, width_style, number = [i.value for i in style_net.get_shape()]
         
         factor = height*width
         style_factor = height_style*width_style
@@ -524,17 +524,17 @@ def get_prior_loss(x_signal, length, net_type):
             conv1 = tf.contrib.layers.conv2d_transpose(reshaped, num_outputs=4*64, kernel_size=k, stride=2, padding=padding,    \
                                             reuse=reuse, activation_fn=act_fn, normalizer_fn=bn, \
                                             weights_initializer=initializer,scope="g_conv1")
-            print 'conv1.shape:', conv1.get_shape()
+            print('conv1.shape:', conv1.get_shape())
 
             conv2 = tf.contrib.layers.conv2d_transpose(conv1, num_outputs=2*64, kernel_size=k, stride=2, padding=padding, \
                                             reuse=reuse, activation_fn=act_fn,normalizer_fn=bn, \
                                             weights_initializer=initializer,scope="g_conv2")
 
-            print 'conv2.shape:', conv2.get_shape()
+            print('conv2.shape:', conv2.get_shape())
             conv3 = tf.contrib.layers.conv2d_transpose(conv2, num_outputs=32, kernel_size=k, stride=2, padding=padding, \
                                             reuse=reuse, activation_fn=act_fn,normalizer_fn=bn, \
                                             weights_initializer=initializer,scope="g_conv3")
-            print 'conv3.shape:', conv3.get_shape()
+            print('conv3.shape:', conv3.get_shape())
             if args.input_size == "64,86":
                 conv3 = conv3[:, 4:-5, :, :]
             if args.use_stft:
@@ -542,7 +542,7 @@ def get_prior_loss(x_signal, length, net_type):
             conv4 = tf.contrib.layers.conv2d(conv3, num_outputs=1, kernel_size=k, stride=1, padding=padding, \
                                             reuse=reuse, activation_fn=gen_act_fn, scope="g_conv4")
 
-            print 'conv4.shape:', conv4.get_shape()
+            print('conv4.shape:', conv4.get_shape())
             conv4 = tf.transpose(conv4, (0, 3, 1, 2))
             return conv4
 
@@ -599,7 +599,7 @@ def get_prior_loss(x_signal, length, net_type):
 
     _, x_mag_energy, x_stft_exact = get_logmagnitude_STFT(x_signal, dft_real_kernels_tf, dft_imag_kernels_tf, n_hop)
     x_stft = x_stft_exact#/tf.reduce_max(x_stft_exact)
-    print 'x_stft.shape:', x_stft.get_shape()
+    print('x_stft.shape:', x_stft.get_shape())
 
     mel_basis = mel(22050, n_dft, n_mels=n_mels)
     mel_basis = np.transpose(mel_basis, (1, 0))
@@ -621,7 +621,7 @@ def get_prior_loss(x_signal, length, net_type):
         x_mel_normed = 2*x_mel_normed - 1.0
         gen_act_fn = tf.nn.tanh
         
-    print 'x_mel.shape:', x_mel_normed.get_shape()
+    print('x_mel.shape:', x_mel_normed.get_shape())
     
     if args.use_disc:
         # just pure GAN stuff
@@ -797,13 +797,13 @@ def run_exp(content,
         fmax = fs/2.0
         
     if not suppress_output:
-        print 'Content:', CONTENT_FILENAME, fs_content
+        print('Content:', CONTENT_FILENAME, fs_content)
         display(Audio(x_content, rate=fs_content))
 
-        print 'Style harm:', STYLE_FILENAME, fs_style
+        print('Style harm:', STYLE_FILENAME, fs_style)
         display(Audio(x_style, rate=fs_style))
         
-        print 'Style rhythm:', style_rhythm, fs_style
+        print('Style rhythm:', style_rhythm, fs_style)
         display(Audio(x_style_rhythm, rate=fs_style))
         
     dft_real_kernels, dft_imag_kernels = get_stft_kernels(n_fft) # numpy arrays for dft kernels
@@ -823,13 +823,13 @@ def run_exp(content,
     
     if devices == "default":
         devices = get_available_devices()
-    print 'Using device(s):', devices
+    print('Using device(s):', devices)
     
     config = tf.ConfigProto(allow_soft_placement = True) #, log_device_placement=True)
     config.gpu_options.allow_growth = True
     
     for exp_type in exp_types:
-        print 'Running experiment:', exp_type
+        print('Running experiment:', exp_type)
         
         if image_init == '':
             image_init = np.random.standard_normal(input_shape).astype(np.float32)*1e-3
@@ -842,7 +842,7 @@ def run_exp(content,
 
             # input
             #for d in devices:
-            print 'Loading input vars on gpu 0'
+            print('Loading input vars on gpu 0')
             with g.device(input_dev):
                 beta_harm = tf.placeholder(tf.float32, shape=(), name="beta_harm")
                 beta_energy = tf.placeholder(tf.float32, shape=(), name="beta_energy")
@@ -885,7 +885,7 @@ def run_exp(content,
 
             # Define mel net
             if include_energy:
-                print 'Loading mel on gpu 1'
+                print('Loading mel on gpu 1')
                 with g.device(mel_dev1):
                     mel_basis = mel(fs, n_fft, n_mels=n_mels)
                     mel_basis = np.transpose(mel_basis, (1, 0))
@@ -954,7 +954,7 @@ def run_exp(content,
                 norm_content_energy_stft = tf.ones(shape=())
 
             if include_harm:
-                print 'Loading STFT on gpu 0'
+                print('Loading STFT on gpu 0')
                 with g.device(harm_dev):
                     content_loss, style_loss, net_harm, net_style_harm = get_harm_loss(x, x_content, x_style, kernel, "harm", act_fn, loss_fn, include_harm_content, include_harm_style)
                     style_loss = beta_harm * style_loss
@@ -984,7 +984,7 @@ def run_exp(content,
                 norm_content_stft = tf.ones(shape=())*10
 
             if include_cqt:
-                print 'Loading CQT on gpu 1'
+                print('Loading CQT on gpu 1')
                 with g.device(cqt_dev):
                     d = 1
                     b = 12*d
@@ -1107,7 +1107,7 @@ def run_exp(content,
                         weight = float(l_type[1])
                     l_type = l_type[0]
                     if l_type == 'contentharm':
-                        print 'adding content harm...'
+                        print('adding content harm...')
                         total_content_loss += weight*content_loss
                     elif l_type == 'styleharm':
                         total_style_loss += weight*style_loss
@@ -1132,7 +1132,7 @@ def run_exp(content,
                     elif l_type == 'priormeldisc':
                         total_prior_loss += weight*disc_loss_mel
                     else:
-                        print 'WARNING: Loss', l_type, 'not recognized'
+                        print('WARNING: Loss', l_type, 'not recognized')
                         return 0
 
                 loss =  total_style_loss + total_content_loss + total_prior_loss
@@ -1184,21 +1184,21 @@ def run_exp(content,
                     s_cqt_stft = norm_style_cqt_stft.eval(feed_dict=feed_dict)
                     c_cqt_stft = norm_content_cqt_stft.eval(feed_dict=feed_dict)
 
-                    print 'Content norm:', c
-                    print 'Content CQT norm:', c_cqt
-                    print 'Content Mel norm:', c_energy
-                    print 'Original style norm:', s_harm
-                    print 'Original energy norm:', s_energy
+                    print('Content norm:', c)
+                    print('Content CQT norm:', c_cqt)
+                    print('Content Mel norm:', c_energy)
+                    print('Original style norm:', s_harm)
+                    print('Original energy norm:', s_energy)
 
-                    print 'Original prior norm:', p
-                    print 'Original prior norm-disc:', pd
-                    print 'Original prior norm Mel:', p_mel
-                    print 'Original prior norm-disc Mel:', pd_mel
+                    print('Original prior norm:', p)
+                    print('Original prior norm-disc:', pd)
+                    print('Original prior norm Mel:', p_mel)
+                    print('Original prior norm-disc Mel:', pd_mel)
                     
-                    print 'Content Norm STFT:', norm_content_stft.eval(feed_dict=feed_dict)
-                    print 'Content CQT Norm STFT:', c_cqt_stft
-                    print 'Style Norm STFT:', norm_style_harm_stft.eval(feed_dict=feed_dict)
-                    print 'Style Energy Norm STFT:', norm_style_energy_stft.eval(feed_dict=feed_dict)
+                    print('Content Norm STFT:', norm_content_stft.eval(feed_dict=feed_dict))
+                    print('Content CQT Norm STFT:', c_cqt_stft)
+                    print('Style Norm STFT:', norm_style_harm_stft.eval(feed_dict=feed_dict))
+                    print('Style Energy Norm STFT:', norm_style_energy_stft.eval(feed_dict=feed_dict))
 
                     if debug:
                         returns = []
@@ -1212,7 +1212,7 @@ def run_exp(content,
                         return returns
 
                     if equalize_loss_grads:
-                        print 'Normalizing Style Loss Coefficients.'
+                        print('Normalizing Style Loss Coefficients.')
                         if include_harm_content:
                             beta_vals = [c/s_harm, c/s_energy, c/s_cqt]
                             beta_vals += [p/c, pd/c]
@@ -1223,7 +1223,7 @@ def run_exp(content,
                             beta_vals += [p/c_energy, pd/c_energy]
                             beta_vals += [p_mel/c_energy, pd_mel/c_energy]
                         elif include_cqt_content:
-                            print '\nNormalizing for cqt...\n'
+                            print('\nNormalizing for cqt...\n')
                             beta_vals = [c_cqt/s_harm, c_cqt/s_energy, c_cqt/s_cqt]
                             beta_vals += [p/c_cqt, pd/c_cqt]
                             beta_vals += [p_mel/c_cqt, pd_mel/c_cqt]
@@ -1287,7 +1287,7 @@ def run_exp(content,
                         except:
                             pass
 
-                    print 'Final loss:', loss.eval(feed_dict=feed_dict)
+                    print('Final loss:', loss.eval(feed_dict=feed_dict))
                     result = x_.eval()
                     """
                     if include_cqt:
@@ -1315,7 +1315,7 @@ def run_exp(content,
                 
         if not suppress_output:
             if final_save_name == None:
-                print 'Result for losses:', ', '.join(exp_type.split('+'))
+                print('Result for losses:', ', '.join(exp_type.split('+')))
             else:
-                print '\n'.join(final_save_name.split('/')[-1].split('_'))
+                print('\n'.join(final_save_name.split('/')[-1].split('_')))
             display(Audio(x, rate=fs))
